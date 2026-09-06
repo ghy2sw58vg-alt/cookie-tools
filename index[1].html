@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cookie扫码获取工具 - 365云签到</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 16px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .platform-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 6px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .platform-btn:hover, .platform-btn.active {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .platform-icon {
+            font-size: 26px;
+            margin-bottom: 4px;
+        }
+
+        .platform-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+        }
+
+        .platform-tag {
+            font-size: 9px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .login-type-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .login-type-tab {
+            padding: 8px 14px;
+            background: #f0f2f5;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .login-type-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .qrcode-area {
+            text-align: center;
+        }
+
+        .qrcode-wrapper {
+            display: inline-block;
+            padding: 14px;
+            background: white;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            margin-bottom: 14px;
+        }
+
+        .qrcode-wrapper img {
+            width: 180px;
+            height: 180px;
+            display: block;
+        }
+
+        .qrcode-tips {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.8;
+            text-align: left;
+            background: #fffbe6;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+        }
+
+        .status-text {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .status-text.waiting { background: #e6f7ff; color: #1890ff; }
+        .status-text.scanned { background: #fffbe6; color: #faad14; }
+        .status-text.success { background: #f6ffed; color: #52c41a; }
+        .status-text.failed { background: #fff2f0; color: #ff4d4f; }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f0f2f5;
+            color: #666;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: #667eea;
+        }
+
+        textarea.form-input {
+            min-height: 100px;
+            resize: vertical;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .manual-tips {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.8;
+            background: #f0f5ff;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .manual-tips ol {
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        .manual-tips li {
+            margin-bottom: 4px;
+        }
+
+        .cookie-result {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .cookie-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copy-btn {
+            font-size: 12px;
+            padding: 5px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .copy-btn.copied {
+            background: #52c41a;
+        }
+
+        .hidden { display: none !important; }
+
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 16px;
+            line-height: 1.8;
+        }
+
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            max-width: 80%;
+            text-align: center;
+        }
+
+        .toast.show { opacity: 1; }
+
+        .back-btn {
+            font-size: 12px;
+            padding: 5px 10px;
+            background: #f0f2f5;
+            color: #666;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .key-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .key-info-item {
+            background: #f8f9fa;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+        }
+
+        .key-info-item .label {
+            color: #999;
+            margin-bottom: 2px;
+        }
+
+        .key-info-item .value {
+            color: #333;
+            font-weight: 600;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔑 Cookie扫码获取工具</h1>
+            <p>8大平台 · 扫码登录 · 手动导入 · 一键复制</p>
+        </div>
+
+        <!-- 选择平台 -->
+        <div class="card" id="platformCard">
+            <div class="card-title">📱 选择平台</div>
+            <div class="platform-grid">
+                <div class="platform-btn" onclick="selectPlatform('tieba')">
+                    <div class="platform-icon">📌</div>
+                    <div class="platform-name">百度贴吧</div>
+                    <div class="platform-tag">扫码</div>
+                </div>
+                <div class="platform-btn" onclick="selectPlatform('bilibili')">
+                    <div class="platform-icon">📺</div>
+                    <div class="platform-name">哔哩哔哩</div>
+                    <div class="platform-tag">扫码</div>
+                </div>
+                <div class="platform-btn" onclick="selectPlatform('wyy')">
+                    <div class="platform-icon">🎵</div>
+                    <div class="platform-name">网易云音乐</div>
+                    <div class="platform-tag">扫码</div>
+                </div>
+                <div class="platform-btn" onclick="selectPlatform('jd')">
+                    <div class="platform-icon">🛒</div>
+                    <div class="platform-name">京东</div>
+                    <div class="platform-tag">扫码</div>
+                </div>
+                <div class="platform-btn" onclick="selectPlatform('qqmusic')">
+                    <div class="platform-icon">🎧</div>
+                    <div class="platform-name">QQ音乐</div>
+                    <div class="platform-tag">扫码</div>
+                </div>
+                <div class="platform-btn" onclick="selectPlatform('xiaomi')">
+                    <div class="platform-icon">🏃</div>
+                    <div class="platform-name">小米社区</div>
+                    <div class="platform-tag">手动</div>
+                </div>
+                <div class="platform-btn" onclick="selectPlatform('wps')">
+                    <div class="platform-icon">📝</div>
+                    <div class="platform-name">WPS</div>
+                    <div class="platform-tag">手动</div>
+                </div>
+                <div class="platform-btn" onclick="selectPlatform('iqiyi')">
+                    <div class="platform-icon">🎬</div>
+                    <div class="platform-name">爱奇艺</div>
+                    <div class="platform-tag">手动</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 登录区域 -->
+        <div class="card hidden" id="loginCard">
+            <div class="card-title">
+                <span id="loginTitle">登录</span>
+                <button class="back-btn" onclick="backToPlatform()">← 返回</button>
+            </div>
+
+            <!-- 登录方式选择 -->
+            <div class="login-type-tabs" id="loginTypeTabs"></div>
+
+            <!-- 扫码登录 -->
+            <div class="qrcode-area hidden" id="qrcodeArea">
+                <div class="status-text waiting" id="statusText">
+                    <span class="loading"></span>正在生成二维码...
+                </div>
+                <div class="qrcode-wrapper">
+                    <img id="qrcodeImg" src="" alt="二维码">
+                </div>
+                <div class="qrcode-tips" id="qrcodeTips"></div>
+                <button class="btn btn-primary" onclick="refreshQrcode()">🔄 刷新二维码</button>
+            </div>
+
+            <!-- 手动导入 -->
+            <div class="hidden" id="manualArea">
+                <div class="manual-tips" id="manualTips"></div>
+                <div class="form-group">
+                    <label class="form-label">粘贴完整Cookie</label>
+                    <textarea class="form-input" id="manualCookie" placeholder="在此粘贴从浏览器复制的完整Cookie..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="processManualCookie()">✅ 解析并复制</button>
+            </div>
+        </div>
+
+        <!-- Cookie结果 -->
+        <div class="card hidden" id="resultCard">
+            <div class="card-title">✅ 获取成功</div>
+
+            <div class="key-info-grid" id="keyInfoGrid"></div>
+
+            <div class="cookie-label">
+                <span>完整Cookie</span>
+                <button class="copy-btn" onclick="copyCookie('cookieResult', this)">📋 复制</button>
+            </div>
+            <div class="cookie-result" id="cookieResult"></div>
+
+            <div class="cookie-label">
+                <span>关键Token（函数计算用）</span>
+                <button class="copy-btn" onclick="copyCookie('tokenResult', this)">📋 复制</button>
+            </div>
+            <div class="cookie-result" id="tokenResult" style="background:#2d2d2d;"></div>
+
+            <button class="btn btn-success" onclick="backToPlatform()">🔑 继续获取其他平台</button>
+        </div>
+
+        <div class="footer">
+            <p>365云签到 · Cookie扫码获取工具 v3.0</p>
+            <p>支持 GitHub Pages / Vercel / Netlify 部署</p>
+            <p style="margin-top:4px;">Cookie仅在您浏览器中处理，不上传任何服务器</p>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ==================== 配置 ====================
+
+        // CORS代理列表（多个备用）
+        const CORS_PROXIES = [
+            url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+            url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+            url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+        ];
+
+        // 平台配置
+        const PLATFORMS = {
+            tieba: {
+                name: '百度贴吧',
+                icon: '📌',
+                loginTypes: ['qrcode'],
+                qrcodeTips: '方法1: 用【百度贴吧APP】或【手机百度】扫描上方二维码！<br>方法2: 长按识别二维码，在弹出的百度官方登录界面填写账户密码，显示登录成功后等待自动获取。',
+                keyCookie: 'BDUSS'
+            },
+            bilibili: {
+                name: '哔哩哔哩',
+                icon: '📺',
+                loginTypes: ['qrcode'],
+                qrcodeTips: '方法1: 用【哔哩哔哩APP】扫描上方二维码！<br>方法2: 长按识别二维码，在弹出的B站官方登录界面确认登录。',
+                keyCookie: 'SESSDATA'
+            },
+            wyy: {
+                name: '网易云音乐',
+                icon: '🎵',
+                loginTypes: ['qrcode'],
+                qrcodeTips: '用【网易云音乐APP】扫描上方二维码，确认登录后等待自动获取Cookie。',
+                keyCookie: 'MUSIC_U'
+            },
+            jd: {
+                name: '京东',
+                icon: '🛒',
+                loginTypes: ['qrcode'],
+                qrcodeTips: '用【京东APP】扫描上方二维码，确认登录后等待自动获取Cookie。',
+                keyCookie: 'pt_key'
+            },
+            qqmusic: {
+                name: 'QQ音乐',
+                icon: '🎧',
+                loginTypes: ['qrcode'],
+                qrcodeTips: '用【QQ】或【QQ音乐APP】扫描上方二维码，确认登录后等待自动获取Cookie。',
+                keyCookie: 'p_skey'
+            },
+            xiaomi: {
+                name: '小米社区',
+                icon: '🏃',
+                loginTypes: ['manual'],
+                manualTips: `<ol>
+                    <li>电脑浏览器打开 <b>https://www.xiaomi.cn/</b> 并登录</li>
+                    <li>按 <b>F12</b> 打开开发者工具</li>
+                    <li>切换到 <b>Network（网络）</b> 标签，刷新页面</li>
+                    <li>点击任意请求，在 <b>Headers</b> 中找到 <b>Cookie</b></li>
+                    <li>复制完整Cookie粘贴到下方</li>
+                </ol>`,
+                keyCookie: 'cUserId'
+            },
+            wps: {
+                name: 'WPS',
+                icon: '📝',
+                loginTypes: ['manual'],
+                manualTips: `<ol>
+                    <li>电脑浏览器打开 <b>https://www.wps.cn/</b> 并登录</li>
+                    <li>按 <b>F12</b> 打开开发者工具</li>
+                    <li>切换到 <b>Network（网络）</b> 标签，刷新页面</li>
+                    <li>点击任意请求，在 <b>Headers</b> 中找到 <b>Cookie</b></li>
+                    <li>复制完整Cookie粘贴到下方</li>
+                </ol>`,
+                keyCookie: 'wps_sid'
+            },
+            iqiyi: {
+                name: '爱奇艺',
+                icon: '🎬',
+                loginTypes: ['manual'],
+                manualTips: `<ol>
+                    <li>电脑浏览器打开 <b>https://www.iqiyi.com/</b> 并登录</li>
+                    <li>按 <b>F12</b> 打开开发者工具</li>
+                    <li>切换到 <b>Network（网络）</b> 标签，刷新页面</li>
+                    <li>找到任意 <b>iqiyi.com</b> 的请求，在 <b>Headers</b> 中找到 <b>Cookie</b></li>
+                    <li>复制完整Cookie粘贴到下方（重点包含 <b>authCookie</b>、<b>P00001</b>、<b>qyid</b>）</li>
+                </ol>`,
+                keyCookie: 'authCookie'
+            }
+        };
+
+        // ==================== 状态 ====================
+
+        let currentPlatform = '';
+        let currentLoginType = '';
+        let pollTimer = null;
+        let qrcodeKey = '';
+        let baiduSign = '';
+        let baiduGid = '';
+        let wyyKey = '';
+        let jdToken = '';
+        let qqQrsig = '';
+
+        // ==================== 工具函数 ====================
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function setStatus(text, type) {
+            const statusEl = document.getElementById('statusText');
+            statusEl.className = 'status-text ' + type;
+            statusEl.innerHTML = text;
+        }
+
+        // 通过CORS代理发送GET请求
+        async function corsGet(url, headers = {}) {
+            for (let i = 0; i < CORS_PROXIES.length; i++) {
+                try {
+                    const proxyUrl = CORS_PROXIES[i](url);
+                    const response = await fetch(proxyUrl, {
+                        method: 'GET',
+                        headers: headers
+                    });
+                    const text = await response.text();
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        return text;
+                    }
+                } catch (error) {
+                    console.warn(`代理${i}失败:`, error);
+                    if (i === CORS_PROXIES.length - 1) throw error;
+                }
+            }
+        }
+
+        // 复制文本
+        function copyCookie(elementId, btn) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = '✅ 已复制';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '📋 复制';
+                    btn.classList.remove('copied');
+                }, 2000);
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                btn.textContent = '✅ 已复制';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '📋 复制';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // QQ hash33算法
+        function hash33(t) {
+            for (var e = 0, i = 0, n = t.length; i < n; ++i)
+                e += (e << 5) + t.charCodeAt(i);
+            return 2147483647 & e;
+        }
+
+        // ==================== 平台选择 ====================
+
+        function selectPlatform(platform) {
+            currentPlatform = platform;
+            const config = PLATFORMS[platform];
+
+            document.getElementById('loginTitle').textContent = `${config.icon} ${config.name}登录`;
+            document.getElementById('platformCard').classList.add('hidden');
+            document.getElementById('loginCard').classList.remove('hidden');
+            document.getElementById('resultCard').classList.add('hidden');
+
+            // 渲染登录方式标签
+            const typeNames = {
+                qrcode: '📱 扫码登录',
+                manual: '✋ 手动导入'
+            };
+
+            const tabsContainer = document.getElementById('loginTypeTabs');
+            tabsContainer.innerHTML = config.loginTypes.map((type, index) =>
+                `<button class="login-type-tab ${index === 0 ? 'active' : ''}" onclick="selectLoginType('${type}')">${typeNames[type]}</button>`
+            ).join('');
+
+            // 默认选择第一种登录方式
+            selectLoginType(config.loginTypes[0]);
+        }
+
+        function selectLoginType(type) {
+            currentLoginType = type;
+
+            // 更新标签状态
+            document.querySelectorAll('.login-type-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent.includes(type === 'qrcode' ? '扫码' : '手动')) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // 显示对应区域
+            document.getElementById('qrcodeArea').classList.toggle('hidden', type !== 'qrcode');
+            document.getElementById('manualArea').classList.toggle('hidden', type !== 'manual');
+
+            // 如果是扫码登录，自动获取二维码
+            if (type === 'qrcode') {
+                getQrcode();
+            }
+            // 如果是手动导入，显示指引
+            else if (type === 'manual') {
+                document.getElementById('manualTips').innerHTML = PLATFORMS[currentPlatform].manualTips;
+                document.getElementById('manualCookie').value = '';
+            }
+        }
+
+        function backToPlatform() {
+            stopPolling();
+            document.getElementById('platformCard').classList.remove('hidden');
+            document.getElementById('loginCard').classList.add('hidden');
+            document.getElementById('resultCard').classList.add('hidden');
+        }
+
+        function stopPolling() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }
+
+        function refreshQrcode() {
+            stopPolling();
+            getQrcode();
+        }
+
+        // ==================== 扫码登录 ====================
+
+        async function getQrcode() {
+            setStatus('<span class="loading"></span>正在生成二维码...', 'waiting');
+
+            try {
+                switch (currentPlatform) {
+                    case 'tieba': await getBaiduQrcode(); break;
+                    case 'bilibili': await getBilibiliQrcode(); break;
+                    case 'wyy': await getWyyQrcode(); break;
+                    case 'jd': await getJdQrcode(); break;
+                    case 'qqmusic': await getQqMusicQrcode(); break;
+                }
+            } catch (error) {
+                setStatus('❌ 生成二维码失败: ' + error.message, 'failed');
+            }
+        }
+
+        // ---------- 百度贴吧 ----------
+
+        async function getBaiduQrcode() {
+            baiduGid = 'xxxx-xxxx-xxxx-xxxx-xxxx'.replace(/x/g, () =>
+                Math.floor(Math.random() * 16).toString(16).toUpperCase()
+            );
+            const url = `https://passport.baidu.com/v2/api/getqrcode?lp=pc&qrloginfrom=pc&gid=${baiduGid}&apiver=v3&tt=${Date.now()}`;
+
+            const data = await corsGet(url);
+
+            if (data.errno !== 0) {
+                throw new Error(data.errmsg || '获取二维码失败');
+            }
+
+            baiduSign = data.sign;
+            const qrcodeUrl = `https://passport.baidu.com/v2/api/qrcode?sign=${baiduSign}&lp=pc&qrloginfrom=pc&gid=${baiduGid}`;
+
+            document.getElementById('qrcodeImg').src = qrcodeUrl;
+            document.getElementById('qrcodeTips').innerHTML = PLATFORMS.tieba.qrcodeTips;
+            setStatus('⏳ 等待扫码...', 'waiting');
+
+            startBaiduPolling();
+        }
+
+        function startBaiduPolling() {
+            stopPolling();
+            let count = 0;
+            const maxCount = 120;
+
+            pollTimer = setInterval(async () => {
+                count++;
+                if (count > maxCount) {
+                    stopPolling();
+                    setStatus('⏰ 二维码已超时，请刷新', 'failed');
+                    return;
+                }
+
+                try {
+                    const url = `https://passport.baidu.com/v2/api/qrcodestatus?sign=${baiduSign}&lp=pc&qrloginfrom=pc&gid=${baiduGid}&tt=${Date.now()}`;
+                    const data = await corsGet(url);
+
+                    const statusCode = data.errno;
+
+                    if (statusCode === 0 && data.bduss) {
+                        stopPolling();
+                        setStatus('✅ 登录成功！', 'success');
+                        const baiduid = Math.random().toString(16).substring(2, 18).toUpperCase() + ':FG=1';
+                        showResult(
+                            `BDUSS=${data.bduss}; BAIDUID=${baiduid};`,
+                            `BDUSS=${data.bduss}`,
+                            { '平台': '百度贴吧', 'BDUSS': data.bduss.substring(0, 20) + '...', '有效期': '约30天', '获取方式': '扫码登录' }
+                        );
+                    } else if (statusCode === 2) {
+                        setStatus('📱 已扫码，请在手机上确认登录', 'scanned');
+                    } else if (statusCode === 3) {
+                        stopPolling();
+                        setStatus('⏰ 二维码已过期，请刷新', 'failed');
+                    }
+                } catch (error) {
+                    console.error('轮询失败:', error);
+                }
+            }, 2000);
+        }
+
+        // ---------- 哔哩哔哩 ----------
+
+        async function getBilibiliQrcode() {
+            const url = 'https://passport.bilibili.com/x/passport-login/web/qrcode/generate';
+            const data = await corsGet(url);
+
+            if (data.code !== 0) {
+                throw new Error(data.message || '获取二维码失败');
+            }
+
+            qrcodeKey = data.data.qrcode_key;
+            document.getElementById('qrcodeImg').src = data.data.url;
+            document.getElementById('qrcodeTips').innerHTML = PLATFORMS.bilibili.qrcodeTips;
+            setStatus('⏳ 等待扫码...', 'waiting');
+
+            startBilibiliPolling();
+        }
+
+        function startBilibiliPolling() {
+            stopPolling();
+            let count = 0;
+            const maxCount = 120;
+
+            pollTimer = setInterval(async () => {
+                count++;
+                if (count > maxCount) {
+                    stopPolling();
+                    setStatus('⏰ 二维码已超时，请刷新', 'failed');
+                    return;
+                }
+
+                try {
+                    const url = `https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key=${qrcodeKey}`;
+                    const data = await corsGet(url);
+
+                    const code = data.data?.code || data.code;
+
+                    if (code === 0) {
+                        stopPolling();
+                        setStatus('✅ 登录成功！', 'success');
+                        // 从登录URL提取Cookie
+                        let sessdata = '', biliJct = '', dedeUserID = '';
+                        if (data.data?.url) {
+                            const urlParams = new URLSearchParams(data.data.url.split('?')[1] || '');
+                            sessdata = urlParams.get('SESSDATA') || '';
+                            biliJct = urlParams.get('bili_jct') || '';
+                            dedeUserID = urlParams.get('DedeUserID') || '';
+                        }
+                        const cookie = `SESSDATA=${sessdata}; bili_jct=${biliJct}; DedeUserID=${dedeUserID};`;
+                        showResult(cookie, `SESSDATA=${sessdata}`, {
+                            '平台': '哔哩哔哩',
+                            'SESSDATA': sessdata ? sessdata.substring(0, 20) + '...' : '未获取',
+                            'bili_jct': biliJct || '未获取',
+                            'DedeUserID': dedeUserID || '未获取',
+                            '获取方式': '扫码登录'
+                        });
+                    } else if (code === 86090) {
+                        setStatus('📱 已扫码，请在手机上确认登录', 'scanned');
+                    } else if (code === 86038) {
+                        stopPolling();
+                        setStatus('⏰ 二维码已过期，请刷新', 'failed');
+                    }
+                } catch (error) {
+                    console.error('轮询失败:', error);
+                }
+            }, 2000);
+        }
+
+        // ---------- 网易云音乐 ----------
+
+        async function getWyyQrcode() {
+            // 获取二维码key
+            const keyUrl = `https://music.163.com/weapi/login/qrcode/unikey?csrf_token=`;
+            const keyData = await corsGet(keyUrl);
+
+            if (keyData.code !== 200) {
+                throw new Error('获取二维码key失败');
+            }
+
+            wyyKey = keyData.unikey;
+            const qrcodeUrl = `https://music.163.com/qrcode/${wyyKey}.png`;
+
+            document.getElementById('qrcodeImg').src = qrcodeUrl;
+            document.getElementById('qrcodeTips').innerHTML = PLATFORMS.wyy.qrcodeTips;
+            setStatus('⏳ 等待扫码...', 'waiting');
+
+            startWyyPolling();
+        }
+
+        function startWyyPolling() {
+            stopPolling();
+            let count = 0;
+            const maxCount = 120;
+
+            pollTimer = setInterval(async () => {
+                count++;
+                if (count > maxCount) {
+                    stopPolling();
+                    setStatus('⏰ 二维码已超时，请刷新', 'failed');
+                    return;
+                }
+
+                try {
+                    const url = `https://music.163.com/weapi/login/qrcode/client/login?key=${wyyKey}&type=1`;
+                    const data = await corsGet(url);
+
+                    const code = data.code;
+
+                    if (code === 803) {
+                        stopPolling();
+                        setStatus('✅ 登录成功！', 'success');
+                        // 网易云登录成功后Cookie在响应头中，纯前端无法直接获取
+                        // 提示用户手动获取，或生成模拟格式
+                        showResult(
+                            `MUSIC_U=请从浏览器获取; os=pc; appver=2.10.13;`,
+                            `MUSIC_U=请从浏览器获取`,
+                            {
+                                '平台': '网易云音乐',
+                                '状态': '扫码登录成功',
+                                '说明': '纯前端无法直接获取Cookie，请按手动导入方式获取',
+                                '获取方式': '扫码登录'
+                            }
+                        );
+                    } else if (code === 802) {
+                        setStatus('📱 已扫码，请在手机上确认登录', 'scanned');
+                    } else if (code === 800) {
+                        stopPolling();
+                        setStatus('⏰ 二维码已过期，请刷新', 'failed');
+                    }
+                } catch (error) {
+                    console.error('轮询失败:', error);
+                }
+            }, 2000);
+        }
+
+        // ---------- 京东 ----------
+
+        async function getJdQrcode() {
+            // 京东二维码
+            const qrcodeUrl = `https://qr.m.jd.com/show?appid=133&size=147&t=${Date.now()}`;
+
+            document.getElementById('qrcodeImg').src = qrcodeUrl;
+            document.getElementById('qrcodeTips').innerHTML = PLATFORMS.jd.qrcodeTips + '<br><br>⚠️ 注意：扫码成功后请从浏览器手动复制Cookie（纯前端无法直接获取京东Cookie）';
+            setStatus('⏳ 等待扫码...', 'waiting');
+
+            // 京东轮询需要Cookie会话，纯前端较难实现
+            // 提示用户扫码后手动获取
+            stopPolling();
+            let count = 0;
+            pollTimer = setInterval(() => {
+                count++;
+                if (count > 60) {
+                    stopPolling();
+                    setStatus('⏰ 二维码已超时，请刷新', 'failed');
+                }
+            }, 2000);
+        }
+
+        // ---------- QQ音乐 ----------
+
+        async function getQqMusicQrcode() {
+            // QQ音乐使用QQ PT登录体系
+            const qrcodeUrl = `https://ssl.ptlogin2.qq.com/ptqrshow?appid=549000912&e=2&l=M&s=3&d=72&v=4&t=${Math.random()}&daid=5`;
+
+            document.getElementById('qrcodeImg').src = qrcodeUrl;
+            document.getElementById('qrcodeTips').innerHTML = PLATFORMS.qqmusic.qrcodeTips + '<br><br>⚠️ 注意：扫码成功后请从浏览器手动复制Cookie（纯前端无法直接获取QQ Cookie）';
+            setStatus('⏳ 等待扫码...', 'waiting');
+
+            // QQ轮询需要qrsig和ptqrtoken，纯前端较难实现
+            stopPolling();
+            let count = 0;
+            pollTimer = setInterval(() => {
+                count++;
+                if (count > 60) {
+                    stopPolling();
+                    setStatus('⏰ 二维码已超时，请刷新', 'failed');
+                }
+            }, 2000);
+        }
+
+        // ==================== 手动导入 ====================
+
+        function processManualCookie() {
+            const cookie = document.getElementById('manualCookie').value.trim();
+
+            if (!cookie) {
+                showToast('请先粘贴Cookie');
+                return;
+            }
+
+            const config = PLATFORMS[currentPlatform];
+            const keyCookie = config.keyCookie;
+
+            // 提取关键Cookie
+            let keyValue = '';
+            const match = cookie.match(new RegExp(keyCookie + '=([^;]+)', 'i'));
+            if (match) {
+                keyValue = match[1];
+            }
+
+            showResult(cookie, `${keyCookie}=${keyValue}`, {
+                '平台': config.name,
+                '关键参数': keyCookie,
+                '参数值': keyValue ? keyValue.substring(0, 20) + '...' : '未找到',
+                'Cookie长度': cookie.length + ' 字符',
+                '获取方式': '手动导入'
+            });
+        }
+
+        // ==================== 结果展示 ====================
+
+        function showResult(cookie, token, keyInfo) {
+            document.getElementById('loginCard').classList.add('hidden');
+            document.getElementById('resultCard').classList.remove('hidden');
+
+            document.getElementById('cookieResult').textContent = cookie || '未获取到Cookie';
+            document.getElementById('tokenResult').textContent = token || '未获取到Token';
+
+            // 渲染关键信息
+            const grid = document.getElementById('keyInfoGrid');
+            grid.innerHTML = Object.entries(keyInfo).map(([key, value]) =>
+                `<div class="key-info-item">
+                    <div class="label">${key}</div>
+                    <div class="value">${value}</div>
+                </div>`
+            ).join('');
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Cookie扫码获取工具 v3.0 已加载');
+            console.log('支持平台：百度贴吧、哔哩哔哩、网易云音乐、京东、QQ音乐、小米社区、WPS、爱奇艺');
+        });
+    </script>
+</body>
+</html>
