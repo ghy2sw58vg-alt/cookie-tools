@@ -663,6 +663,11 @@
             return 2147483647 & e;
         }
 
+        // 生成二维码图片（用在线二维码生成API）
+        function generateQrcodeImage(content, size = 200) {
+            return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(content)}`;
+        }
+
         // ==================== 平台选择 ====================
 
         function selectPlatform(platform) {
@@ -790,23 +795,40 @@
                 }
 
                 try {
-                    const url = `https://passport.baidu.com/v2/api/qrcodestatus?sign=${baiduSign}&lp=pc&qrloginfrom=pc&gid=${baiduGid}&tt=${Date.now()}`;
-                    const data = await corsGet(url);
+                    // 使用 channel/unicast 接口轮询（返回JSONP格式：callback({...})）
+                    const url = `https://passport.baidu.com/channel/unicast?channel_id=${baiduSign}&tpl=tb&apiver=v3&tt=${Date.now()}`;
+                    const rawText = await corsGet(url);
+                    
+                    // 解析JSONP格式：提取callback()里面的JSON
+                    let data = rawText;
+                    if (typeof rawText === 'string') {
+                        const jsonMatch = rawText.match(/\((\{.*\})\)/);
+                        if (jsonMatch) {
+                            try {
+                                data = JSON.parse(jsonMatch[1]);
+                            } catch (e) {
+                                console.warn('JSONP解析失败:', e);
+                            }
+                        }
+                    }
 
+                    // 兼容两种返回格式
                     const statusCode = data.errno;
+                    const bduss = data.bduss || (data.data && data.data.v) || data.v || '';
+                    const status = data.status || (data.data && data.data.status);
 
-                    if (statusCode === 0 && data.bduss) {
+                    if (statusCode === 0 && bduss) {
                         stopPolling();
                         setStatus('✅ 登录成功！', 'success');
                         const baiduid = Math.random().toString(16).substring(2, 18).toUpperCase() + ':FG=1';
                         showResult(
-                            `BDUSS=${data.bduss}; BAIDUID=${baiduid};`,
-                            `BDUSS=${data.bduss}`,
-                            { '平台': '百度贴吧', 'BDUSS': data.bduss.substring(0, 20) + '...', '有效期': '约30天', '获取方式': '扫码登录' }
+                            `BDUSS=${bduss}; BAIDUID=${baiduid};`,
+                            `BDUSS=${bduss}`,
+                            { '平台': '百度贴吧', 'BDUSS': bduss.substring(0, 20) + '...', '有效期': '约30天', '获取方式': '扫码登录' }
                         );
-                    } else if (statusCode === 2) {
+                    } else if (statusCode === 0 && status === 1) {
                         setStatus('📱 已扫码，请在手机上确认登录', 'scanned');
-                    } else if (statusCode === 3) {
+                    } else if (statusCode === 2 || status === 2) {
                         stopPolling();
                         setStatus('⏰ 二维码已过期，请刷新', 'failed');
                     }
@@ -827,7 +849,9 @@
             }
 
             qrcodeKey = data.data.qrcode_key;
-            document.getElementById('qrcodeImg').src = data.data.url;
+            // data.data.url 是二维码内容（文本URL），不是图片，需要用在线API生成二维码图片
+            const bilibiliQrcodeContent = data.data.url;
+            document.getElementById('qrcodeImg').src = generateQrcodeImage(bilibiliQrcodeContent);
             document.getElementById('qrcodeTips').innerHTML = PLATFORMS.bilibili.qrcodeTips;
             setStatus('⏳ 等待扫码...', 'waiting');
 
@@ -887,66 +911,23 @@
         // ---------- 网易云音乐 ----------
 
         async function getWyyQrcode() {
-            // 获取二维码key
-            const keyUrl = `https://music.163.com/weapi/login/qrcode/unikey?csrf_token=`;
-            const keyData = await corsGet(keyUrl);
+            // 网易云unikey接口需要POST+weapi加密，纯前端无法调用
+            // 改用简单方式：直接显示网易云登录页面二维码，用户扫码登录后手动复制Cookie
+            const wyyQrcodeContent = 'https://music.163.com/login';
+            document.getElementById('qrcodeImg').src = generateQrcodeImage(wyyQrcodeContent);
+            document.getElementById('qrcodeTips').innerHTML = PLATFORMS.wyy.qrcodeTips + 
+                '<br><br>⚠️ <b>注意</b>：扫码登录成功后，请点击下方"手动复制Cookie"按钮，按指引获取MUSIC_U';
+            setStatus('⏳ 等待扫码登录...', 'waiting');
 
-            if (keyData.code !== 200) {
-                throw new Error('获取二维码key失败');
-            }
-
-            wyyKey = keyData.unikey;
-            const qrcodeUrl = `https://music.163.com/qrcode/${wyyKey}.png`;
-
-            document.getElementById('qrcodeImg').src = qrcodeUrl;
-            document.getElementById('qrcodeTips').innerHTML = PLATFORMS.wyy.qrcodeTips;
-            setStatus('⏳ 等待扫码...', 'waiting');
-
-            startWyyPolling();
-        }
-
-        function startWyyPolling() {
+            // 不轮询（纯前端无法获取网易云登录状态）
+            // 只做超时检测
             stopPolling();
             let count = 0;
-            const maxCount = 120;
-
-            pollTimer = setInterval(async () => {
+            pollTimer = setInterval(() => {
                 count++;
-                if (count > maxCount) {
+                if (count > 90) {
                     stopPolling();
                     setStatus('⏰ 二维码已超时，请刷新', 'failed');
-                    return;
-                }
-
-                try {
-                    const url = `https://music.163.com/weapi/login/qrcode/client/login?key=${wyyKey}&type=1`;
-                    const data = await corsGet(url);
-
-                    const code = data.code;
-
-                    if (code === 803) {
-                        stopPolling();
-                        setStatus('✅ 登录成功！', 'success');
-                        // 网易云登录成功后Cookie在响应头中，纯前端无法直接获取
-                        // 提示用户手动获取，或生成模拟格式
-                        showResult(
-                            `MUSIC_U=请从浏览器获取; os=pc; appver=2.10.13;`,
-                            `MUSIC_U=请从浏览器获取`,
-                            {
-                                '平台': '网易云音乐',
-                                '状态': '扫码登录成功',
-                                '说明': '纯前端无法直接获取Cookie，请按手动导入方式获取',
-                                '获取方式': '扫码登录'
-                            }
-                        );
-                    } else if (code === 802) {
-                        setStatus('📱 已扫码，请在手机上确认登录', 'scanned');
-                    } else if (code === 800) {
-                        stopPolling();
-                        setStatus('⏰ 二维码已过期，请刷新', 'failed');
-                    }
-                } catch (error) {
-                    console.error('轮询失败:', error);
                 }
             }, 2000);
         }
